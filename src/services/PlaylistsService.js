@@ -1,5 +1,6 @@
 const pool = require('../database/pool');
 const { generatePlaylistId } = require('../utils/idGenerator');
+const { nanoid } = require('nanoid');
 const ClientError = require('../exceptions/ClientError');
 
 class PlaylistsService {
@@ -47,7 +48,14 @@ class PlaylistsService {
   }
 
   async addSongToPlaylist(playlistId, songId) {
-    const id = `ps-${Math.random().toString(36).slice(2, 10)}`;
+    // DIPERBAIKI: Validate song exists sebelum menambahkan
+    const songCheck = await pool.query('SELECT id FROM songs WHERE id = $1', [songId]);
+    if (!songCheck.rowCount) {
+      throw new ClientError('Lagu tidak ditemukan', 404);
+    }
+
+    // DIPERBAIKI: Gunakan nanoid untuk konsistensi dan keamanan
+    const id = `ps-${nanoid(12)}`;
     await pool.query('INSERT INTO playlist_songs(id,playlist_id,song_id) VALUES($1,$2,$3)', [id, playlistId, songId]);
     return id;
   }
