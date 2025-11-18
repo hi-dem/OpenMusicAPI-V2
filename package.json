@@ -1,0 +1,30 @@
+{
+  "name": "openmusic-v2",
+  "version": "1.0.0",
+  "description": "OpenMusic API v2 - Hapi + PostgreSQL + JWT",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "migrate": "npm run migrate:up",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@hapi/hapi": "^20.2.1",
+    "@hapi/jwt": "^4.0.2",
+    "auto-bind": "^4.0.0",
+    "bcrypt": "^5.1.0",
+    "dotenv": "^17.2.3",
+    "joi": "^17.9.2",
+    "nanoid": "^4.0.0",
+    "node-pg-migrate": "^7.3.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.47.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^2.8.8"
+  }
+}
