@@ -1,6 +1,7 @@
 const autoBind = require('auto-bind');
 const Jwt = require('@hapi/jwt');
 const { validateLoginPayload, validateRefreshPayload } = require('../validators/authentications');
+const ClientError = require('../exceptions/ClientError');
 
 class AuthenticationsHandler {
   constructor({ usersService, authenticationsService }) {
@@ -34,7 +35,8 @@ class AuthenticationsHandler {
     try {
       Jwt.token.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
     } catch (e) {
-      throw new Error('Refresh token tidak valid');
+      // DIPERBAIKI: Throw ClientError bukan Error biasa
+      throw new ClientError('Refresh token tidak valid', 400);
     }
 
     // verify token is stored

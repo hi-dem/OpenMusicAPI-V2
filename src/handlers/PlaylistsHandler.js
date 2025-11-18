@@ -52,6 +52,8 @@ class PlaylistsHandler {
   }
 
   async deleteSongFromPlaylistHandler(request) {
+    // DIPERBAIKI: Tambahkan validasi payload
+    validatePlaylistSongPayload(request.payload);
     const { id: playlistId } = request.params;
     const { songId } = request.payload;
     const { id: userId } = request.auth.credentials;
