@@ -53,6 +53,11 @@ exports.up = (pgm) => {
     user_id: { type: 'text', references: 'users(id)', onDelete: 'CASCADE' }
   });
 
+  // DIPERBAIKI: Tambahkan unique constraint untuk mencegah duplicate collaboration
+  pgm.addConstraint('collaborations', 'unique_playlist_user', {
+    unique: ['playlist_id', 'user_id']
+  });
+
   // optional activities table
   pgm.createTable('playlist_song_activities', {
     id: { type: 'text', primaryKey: true },
