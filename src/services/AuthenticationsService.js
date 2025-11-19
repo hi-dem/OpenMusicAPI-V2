@@ -4,7 +4,6 @@ const ClientError = require('../exceptions/ClientError');
 class AuthenticationsService {
   async addRefreshToken(token) {
     try {
-      // DIPERBAIKI: Safe check
       if (!token || typeof token !== 'string') {
         throw new ClientError('Token invalid', 400);
       }
@@ -32,7 +31,6 @@ class AuthenticationsService {
 
   async verifyRefreshToken(token) {
     try {
-      // DIPERBAIKI: Safe check
       if (!token || typeof token !== 'string') {
         throw new ClientError('Token invalid', 400);
       }
@@ -65,7 +63,6 @@ class AuthenticationsService {
 
   async deleteRefreshToken(token) {
     try {
-      // DIPERBAIKI: Safe check
       if (!token || typeof token !== 'string') {
         throw new ClientError('Token invalid', 400);
       }

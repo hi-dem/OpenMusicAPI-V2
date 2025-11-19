@@ -4,13 +4,11 @@ const ClientError = require('../exceptions/ClientError');
 
 class CollaborationsService {
   async addCollaboration(playlistId, userId) {
-    // DIPERBAIKI: Validate playlist exists
     const playlistCheck = await pool.query('SELECT id FROM playlists WHERE id = $1', [playlistId]);
     if (!playlistCheck.rowCount) {
       throw new ClientError('Playlist tidak ditemukan', 404);
     }
 
-    // DIPERBAIKI: Validate user exists sebelum menambahkan kolaborasi
     const userCheck = await pool.query('SELECT id FROM users WHERE id = $1', [userId]);
     if (!userCheck.rowCount) {
       throw new ClientError('User tidak ditemukan', 404);

@@ -5,16 +5,13 @@ const ClientError = require('../exceptions/ClientError');
 
 class UsersService {
   async addUser({ username, password, fullname }) {
-    // Check if username is unique
     const result = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
     if (result.rowCount) {
       throw new ClientError('Username sudah terdaftar', 400);
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
     const id = generateUserId();
     try {
       const res = await pool.query(

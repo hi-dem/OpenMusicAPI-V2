@@ -45,7 +45,6 @@ const init = async () => {
     }
   });
 
-  // services
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
   const albumsService = new AlbumsService();
@@ -53,7 +52,6 @@ const init = async () => {
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService(collaborationsService);
 
-  // handlers
   const usersHandler = new UsersHandler(usersService);
   const authenticationsHandler = new AuthenticationsHandler({ usersService, authenticationsService });
   const albumsHandler = new AlbumsHandler(albumsService);
@@ -70,12 +68,10 @@ const init = async () => {
     collaborationsHandler
   }));
 
-  // global error handling via onPreResponse
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
 
     if (response instanceof Error) {
-      // Handle ClientError
       if (response instanceof ClientError) {
         const res = h.response({ 
           status: 'fail', 
@@ -85,7 +81,6 @@ const init = async () => {
         return res;
       }
 
-      // Handle Boom/Joi validation error
       if (response.isBoom) {
         const res = h.response({
           status: 'fail',
@@ -95,7 +90,6 @@ const init = async () => {
         return res;
       }
 
-      // Handle other errors
       if (!response.isServer) return h.continue;
 
       console.error('[SERVER ERROR]', response);

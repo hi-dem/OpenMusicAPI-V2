@@ -16,13 +16,11 @@ class AuthenticationsHandler {
       const { username, password } = request.payload;
       const userId = await this._usersService.verifyUserCredential(username, password);
 
-      // generate tokens
       const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_KEY, { algorithm: 'HS256' });
       const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_KEY, { algorithm: 'HS256' });
 
       console.log('[LOGIN] Generated refresh token:', refreshToken.substring(0, 30) + '...');
 
-      // store refresh token
       await this._authenticationsService.addRefreshToken(refreshToken);
 
       const res = h.response({ status: 'success', data: { accessToken, refreshToken } });
@@ -39,7 +37,6 @@ class AuthenticationsHandler {
       validateRefreshPayload(request.payload);
       const { refreshToken } = request.payload;
 
-      // DIPERBAIKI: Safe trim (check tipe dulu)
       if (typeof refreshToken !== 'string') {
         throw new ClientError('Refresh token harus string', 400);
       }
@@ -48,16 +45,13 @@ class AuthenticationsHandler {
 
       console.log('[REFRESH] Received token length:', trimmedToken.length);
 
-      // verify token is stored in DB
       await this._authenticationsService.verifyRefreshToken(trimmedToken);
 
-      // verify JWT signature
       const decoded = jwt.verify(trimmedToken, process.env.REFRESH_TOKEN_KEY);
       const { userId } = decoded;
 
       console.log('[REFRESH] ✅ Token verified');
 
-      // generate new access token
       const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_KEY, { algorithm: 'HS256' });
 
       return { status: 'success', data: { accessToken } };
@@ -72,7 +66,6 @@ class AuthenticationsHandler {
       validateRefreshPayload(request.payload);
       const { refreshToken } = request.payload;
 
-      // DIPERBAIKI: Safe trim
       if (typeof refreshToken !== 'string') {
         throw new ClientError('Refresh token harus string', 400);
       }

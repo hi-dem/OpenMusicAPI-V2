@@ -2,7 +2,7 @@ const Joi = require('joi');
 const ClientError = require('../exceptions/ClientError');
 
 const schema = Joi.object({
-  username: Joi.string().min(3).required(), // DIPERBAIKI: Hapus alphanum(), allow special chars
+  username: Joi.string().min(3).required(), 
   password: Joi.string().min(6).required(),
   fullname: Joi.string().required()
 });

@@ -10,7 +10,7 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    'no-console': 'off', // boleh di-set 'warn' kalau ingin peringatan
+    'no-console': 'off', 
     semi: ['error', 'always'],
     quotes: ['error', 'single'],
     'comma-dangle': ['error', 'never'],

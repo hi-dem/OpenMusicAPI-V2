@@ -75,7 +75,6 @@ class PlaylistsService {
     const id = `ps-${nanoid(12)}`;
     await pool.query('INSERT INTO playlist_songs(id,playlist_id,song_id) VALUES($1,$2,$3)', [id, playlistId, songId]);
     
-    // DIPERBAIKI: Insert activity
     if (userId) {
       const activityId = `activity-${nanoid(12)}`;
       await pool.query(
@@ -114,12 +113,11 @@ class PlaylistsService {
     const res = await pool.query('DELETE FROM playlist_songs WHERE playlist_id=$1 AND song_id=$2 RETURNING id', [playlistId, songId]);
     if (!res.rowCount) throw new ClientError('Lagu gagal dihapus dari playlist. Id tidak ditemukan', 404);
     
-    // DIPERBAIKI: Insert activity
     if (userId) {
       const activityId = `activity-${nanoid(12)}`;
       await pool.query(
         'INSERT INTO playlist_song_activities(id,playlist_id,song_id,user_id,action) VALUES($1,$2,$3,$4,$5)',
-        [activityId, playlistId, songId, userId, 'remove']
+        [activityId, playlistId, songId, userId, 'delete']
       );
     }
   }
@@ -128,11 +126,17 @@ class PlaylistsService {
     await this.verifyPlaylistExists(playlistId);
 
     const result = await pool.query(
-      `SELECT psa.id, psa.user_id as userId, u.username, psa.action, psa.time
+      `SELECT psa.id, 
+              psa.user_id as "userId", 
+              u.username, 
+              psa.action, 
+              psa.time, 
+              s.title
        FROM playlist_song_activities psa
        JOIN users u ON psa.user_id = u.id
+       LEFT JOIN songs s ON psa.song_id = s.id
        WHERE psa.playlist_id = $1
-       ORDER BY psa.time DESC`,
+       ORDER BY psa.time ASC`,
       [playlistId]
     );
     return result.rows;
