@@ -16,12 +16,16 @@ class UsersService {
 
     // Insert user
     const id = generateUserId();
-    const res = await pool.query(
-      'INSERT INTO users(id, username, password, fullname) VALUES($1, $2, $3, $4) RETURNING id',
-      [id, username, hashedPassword, fullname]
-    );
-
-    return res.rows[0].id;
+    try {
+      const res = await pool.query(
+        'INSERT INTO users(id, username, password, fullname) VALUES($1, $2, $3, $4) RETURNING id',
+        [id, username, hashedPassword, fullname]
+      );
+      return res.rows[0].id;
+    } catch (error) {
+      console.error('Database error in addUser:', error.message);
+      throw new ClientError('Gagal menambahkan user', 400);
+    }
   }
 
   async getUserById(id) {

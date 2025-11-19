@@ -73,18 +73,37 @@ const init = async () => {
   // global error handling via onPreResponse
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
+
     if (response instanceof Error) {
-      if (response instanceof ClientError || response.isClientError) {
-        const res = h.response({ status: 'fail', message: response.message });
+      // Handle ClientError
+      if (response instanceof ClientError) {
+        const res = h.response({ 
+          status: 'fail', 
+          message: response.message 
+        });
         res.code(response.statusCode || 400);
         return res;
       }
 
+      // Handle Boom/Joi validation error
+      if (response.isBoom) {
+        const res = h.response({
+          status: 'fail',
+          message: response.message
+        });
+        res.code(response.output.statusCode);
+        return res;
+      }
+
+      // Handle other errors
       if (!response.isServer) return h.continue;
 
-      const res = h.response({ status: 'error', message: 'Maaf, terjadi kegagalan pada server kami.' });
+      console.error('[SERVER ERROR]', response);
+      const res = h.response({ 
+        status: 'error', 
+        message: 'Maaf, terjadi kegagalan pada server kami.' 
+      });
       res.code(500);
-      console.error(response);
       return res;
     }
     return h.continue;

@@ -1,4 +1,4 @@
-const autoBind = require('auto-bind');
+const { default: autoBind } = require('auto-bind');
 const { validateUserPayload } = require('../validators/users');
 
 class UsersHandler {

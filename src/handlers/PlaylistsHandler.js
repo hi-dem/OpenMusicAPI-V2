@@ -1,4 +1,4 @@
-const autoBind = require('auto-bind');
+const { default: autoBind } = require('auto-bind');
 const { validatePlaylistPayload, validatePlaylistSongPayload } = require('../validators/playlists');
 
 class PlaylistsHandler {
@@ -37,7 +37,8 @@ class PlaylistsHandler {
     const { songId } = request.payload;
     const { id: userId } = request.auth.credentials;
     await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    await this._playlistsService.addSongToPlaylist(playlistId, songId);
+    // DIPERBAIKI: Pass userId ke service
+    await this._playlistsService.addSongToPlaylist(playlistId, songId, userId);
     const res = h.response({ status: 'success', message: 'Lagu berhasil ditambahkan ke playlist' });
     res.code(201);
     return res;
@@ -52,14 +53,28 @@ class PlaylistsHandler {
   }
 
   async deleteSongFromPlaylistHandler(request) {
-    // DIPERBAIKI: Tambahkan validasi payload
     validatePlaylistSongPayload(request.payload);
     const { id: playlistId } = request.params;
     const { songId } = request.payload;
     const { id: userId } = request.auth.credentials;
     await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
-    await this._playlistsService.removeSongFromPlaylist(playlistId, songId);
+    // DIPERBAIKI: Pass userId ke service
+    await this._playlistsService.removeSongFromPlaylist(playlistId, songId, userId);
     return { status: 'success', message: 'Lagu berhasil dihapus dari playlist' };
+  }
+
+  async getPlaylistActivitiesHandler(request) {
+    const { id } = request.params;
+    const { id: userId } = request.auth.credentials;
+    await this._playlistsService.verifyPlaylistOwner(id, userId);
+    const activities = await this._playlistsService.getPlaylistActivities(id);
+    return { 
+      status: 'success', 
+      data: { 
+        playlistId: id, 
+        activities: Array.isArray(activities) ? activities : [] 
+      } 
+    };
   }
 }
 

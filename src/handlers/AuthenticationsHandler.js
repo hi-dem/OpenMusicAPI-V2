@@ -1,5 +1,5 @@
-const autoBind = require('auto-bind');
-const Jwt = require('@hapi/jwt');
+const { default: autoBind } = require('auto-bind');
+const jwt = require('jsonwebtoken');
 const { validateLoginPayload, validateRefreshPayload } = require('../validators/authentications');
 const ClientError = require('../exceptions/ClientError');
 
@@ -11,51 +11,82 @@ class AuthenticationsHandler {
   }
 
   async postAuthenticationHandler(request, h) {
-    validateLoginPayload(request.payload);
-    const { username, password } = request.payload;
-    const userId = await this._usersService.verifyUserCredential(username, password);
+    try {
+      validateLoginPayload(request.payload);
+      const { username, password } = request.payload;
+      const userId = await this._usersService.verifyUserCredential(username, password);
 
-    // generate tokens
-    const accessToken = Jwt.token.generate({ userId }, { key: process.env.ACCESS_TOKEN_KEY, algorithm: 'HS256' });
-    const refreshToken = Jwt.token.generate({ userId }, { key: process.env.REFRESH_TOKEN_KEY, algorithm: 'HS256' });
+      // generate tokens
+      const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_KEY, { algorithm: 'HS256' });
+      const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_KEY, { algorithm: 'HS256' });
 
-    // store refresh token
-    await this._authenticationsService.addRefreshToken(refreshToken);
+      console.log('[LOGIN] Generated refresh token:', refreshToken.substring(0, 30) + '...');
 
-    const res = h.response({ status: 'success', data: { accessToken, refreshToken } });
-    res.code(201);
-    return res;
+      // store refresh token
+      await this._authenticationsService.addRefreshToken(refreshToken);
+
+      const res = h.response({ status: 'success', data: { accessToken, refreshToken } });
+      res.code(201);
+      return res;
+    } catch (error) {
+      console.error('[LOGIN] Error:', error);
+      throw error;
+    }
   }
 
-  async putAuthenticationHandler(request, h) {
-    validateRefreshPayload(request.payload);
-    const { refreshToken } = request.payload;
-
-    // verify signature of refresh token
+  async putAuthenticationHandler(request) {
     try {
-      Jwt.token.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
+      validateRefreshPayload(request.payload);
+      const { refreshToken } = request.payload;
+
+      // DIPERBAIKI: Safe trim (check tipe dulu)
+      if (typeof refreshToken !== 'string') {
+        throw new ClientError('Refresh token harus string', 400);
+      }
+
+      const trimmedToken = refreshToken.trim();
+
+      console.log('[REFRESH] Received token length:', trimmedToken.length);
+
+      // verify token is stored in DB
+      await this._authenticationsService.verifyRefreshToken(trimmedToken);
+
+      // verify JWT signature
+      const decoded = jwt.verify(trimmedToken, process.env.REFRESH_TOKEN_KEY);
+      const { userId } = decoded;
+
+      console.log('[REFRESH] ✅ Token verified');
+
+      // generate new access token
+      const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_KEY, { algorithm: 'HS256' });
+
+      return { status: 'success', data: { accessToken } };
     } catch (e) {
-      // DIPERBAIKI: Throw ClientError bukan Error biasa
+      console.error('[REFRESH] Error:', e.message);
       throw new ClientError('Refresh token tidak valid', 400);
     }
-
-    // verify token is stored
-    await this._authenticationsService.verifyRefreshToken(refreshToken);
-
-    const artifacts = Jwt.token.decode(refreshToken);
-    const { userId } = artifacts.decoded.payload;
-
-    const accessToken = Jwt.token.generate({ userId }, { key: process.env.ACCESS_TOKEN_KEY, algorithm: 'HS256' });
-
-    return { status: 'success', data: { accessToken } };
   }
 
   async deleteAuthenticationHandler(request) {
-    validateRefreshPayload(request.payload);
-    const { refreshToken } = request.payload;
-    await this._authenticationsService.verifyRefreshToken(refreshToken);
-    await this._authenticationsService.deleteRefreshToken(refreshToken);
-    return { status: 'success', message: 'Refresh token berhasil dihapus' };
+    try {
+      validateRefreshPayload(request.payload);
+      const { refreshToken } = request.payload;
+
+      // DIPERBAIKI: Safe trim
+      if (typeof refreshToken !== 'string') {
+        throw new ClientError('Refresh token harus string', 400);
+      }
+
+      const trimmedToken = refreshToken.trim();
+
+      await this._authenticationsService.verifyRefreshToken(trimmedToken);
+      await this._authenticationsService.deleteRefreshToken(trimmedToken);
+      
+      return { status: 'success', message: 'Refresh token berhasil dihapus' };
+    } catch (error) {
+      console.error('[DELETE AUTH] Error:', error);
+      throw error;
+    }
   }
 }
 

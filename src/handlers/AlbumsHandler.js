@@ -1,4 +1,4 @@
-const autoBind = require('auto-bind');
+const { default: autoBind } = require('auto-bind');
 const { validateAlbumPayload } = require('../validators/albums');
 
 class AlbumsHandler {
@@ -8,12 +8,17 @@ class AlbumsHandler {
   }
 
   async postAlbumHandler(request, h) {
-    validateAlbumPayload(request.payload);
-    const { name, year } = request.payload;
-    const albumId = await this._albumsService.addAlbum({ name, year });
-    const res = h.response({ status: 'success', data: { albumId } });
-    res.code(201);
-    return res;
+    try {
+      validateAlbumPayload(request.payload);
+      const { name, year } = request.payload;
+      const albumId = await this._albumsService.addAlbum({ name, year });
+      const res = h.response({ status: 'success', data: { albumId } });
+      res.code(201);
+      return res;
+    } catch (error) {
+      console.error('Error in postAlbumHandler:', error);
+      throw error;
+    }
   }
 
   async getAlbumByIdHandler(request) {
@@ -23,10 +28,16 @@ class AlbumsHandler {
   }
 
   async putAlbumByIdHandler(request) {
-    const { id } = request.params;
-    validateAlbumPayload(request.payload);
-    await this._albumsService.editAlbumById(id, request.payload);
-    return { status: 'success', message: 'Album berhasil diperbarui' };
+    try {
+      validateAlbumPayload(request.payload);
+      const { id } = request.params;
+      const { name, year } = request.payload;
+      await this._albumsService.editAlbumById(id, { name, year });
+      return { status: 'success', message: 'Album berhasil diperbarui' };
+    } catch (error) {
+      console.error('Error in putAlbumByIdHandler:', error);
+      throw error;
+    }
   }
 
   async deleteAlbumByIdHandler(request) {

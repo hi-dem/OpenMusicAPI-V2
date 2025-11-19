@@ -31,6 +31,9 @@ module.exports = ({ usersHandler, authenticationsHandler, albumsHandler, songsHa
   { method: 'GET', path: '/playlists/{id}/songs', handler: playlistsHandler.getPlaylistSongsHandler.bind(playlistsHandler), options: { auth: 'openmusic_jwt' } },
   { method: 'DELETE', path: '/playlists/{id}/songs', handler: playlistsHandler.deleteSongFromPlaylistHandler.bind(playlistsHandler), options: { auth: 'openmusic_jwt' } },
 
+  // playlist activities (protected) - NEW
+  { method: 'GET', path: '/playlists/{id}/activities', handler: playlistsHandler.getPlaylistActivitiesHandler.bind(playlistsHandler), options: { auth: 'openmusic_jwt' } },
+
   // collaborations (protected)
   { method: 'POST', path: '/collaborations', handler: collaborationsHandler.postCollaborationHandler.bind(collaborationsHandler), options: { auth: 'openmusic_jwt' } },
   { method: 'DELETE', path: '/collaborations', handler: collaborationsHandler.deleteCollaborationHandler.bind(collaborationsHandler), options: { auth: 'openmusic_jwt' } }
